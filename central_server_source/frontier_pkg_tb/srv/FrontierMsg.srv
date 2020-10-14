@@ -1,0 +1,5 @@
+#request
+nav_msgs/OccupancyGrid map_data
+---
+geometry_msgs/PoseArray optimal_frontier_pts
+bool success

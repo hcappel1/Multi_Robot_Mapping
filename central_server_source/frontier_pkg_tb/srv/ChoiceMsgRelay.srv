@@ -1,0 +1,8 @@
+#request
+geometry_msgs/PoseArray pass_down_frontier_req
+geometry_msgs/PoseArray pass_down_path_req
+bool[] chosen_queue_req
+int8 robots_remaining
+---
+#response
+bool success

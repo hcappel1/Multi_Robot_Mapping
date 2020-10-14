@@ -1,0 +1,29 @@
+digraph G {
+"drone_1/base_link" -> "drone_1/front_cam_link"[label="Broadcaster: /drone_1/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 59.324 sec old)\nBuffer length: 0.000 sec\n"];
+"drone_1/base_stabilized" -> "drone_1/base_link"[label="Broadcaster: /drone_1/ground_truth_to_tf\nAverage rate: 100.272 Hz\nMost recent transform: 59.294 ( 0.030 sec old)\nBuffer length: 3.680 sec\n"];
+"drone_1/front_cam_link" -> "drone_1/front_cam_optical_frame"[label="Broadcaster: /drone_1/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 59.324 sec old)\nBuffer length: 0.000 sec\n"];
+"drone_1/base_link" -> "drone_1/laser0_frame"[label="Broadcaster: /drone_1/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 59.324 sec old)\nBuffer length: 0.000 sec\n"];
+"drone_1/base_link" -> "drone_1/sonar_link"[label="Broadcaster: /drone_1/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 59.324 sec old)\nBuffer length: 0.000 sec\n"];
+"drone_2/base_link" -> "drone_2/front_cam_link"[label="Broadcaster: /drone_2/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 59.324 sec old)\nBuffer length: 0.000 sec\n"];
+"drone_2/base_stabilized" -> "drone_2/base_link"[label="Broadcaster: /drone_2/ground_truth_to_tf\nAverage rate: 100.270 Hz\nMost recent transform: 59.323 ( 0.001 sec old)\nBuffer length: 3.710 sec\n"];
+"drone_2/front_cam_link" -> "drone_2/front_cam_optical_frame"[label="Broadcaster: /drone_2/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 59.324 sec old)\nBuffer length: 0.000 sec\n"];
+"drone_2/base_link" -> "drone_2/laser0_frame"[label="Broadcaster: /drone_2/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 59.324 sec old)\nBuffer length: 0.000 sec\n"];
+"drone_2/base_link" -> "drone_2/sonar_link"[label="Broadcaster: /drone_2/robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 59.324 sec old)\nBuffer length: 0.000 sec\n"];
+"drone_2/world" -> "drone_2/base_footprint"[label="Broadcaster: /drone_2/ground_truth_to_tf\nAverage rate: 100.270 Hz\nMost recent transform: 59.323 ( 0.001 sec old)\nBuffer length: 3.710 sec\n"];
+"drone_2/map" -> "drone_2/world"[label="Broadcaster: /hector_mapping_r2\nAverage rate: 23.510 Hz\nMost recent transform: 59.120 ( 0.204 sec old)\nBuffer length: 3.658 sec\n"];
+"drone_2/base_footprint" -> "drone_2/base_stabilized"[label="Broadcaster: /drone_2/ground_truth_to_tf\nAverage rate: 100.270 Hz\nMost recent transform: 59.323 ( 0.001 sec old)\nBuffer length: 3.710 sec\n"];
+"drone_1/world" -> "drone_1/base_footprint"[label="Broadcaster: /drone_1/ground_truth_to_tf\nAverage rate: 100.272 Hz\nMost recent transform: 59.294 ( 0.030 sec old)\nBuffer length: 3.680 sec\n"];
+"drone_1/map" -> "drone_1/world"[label="Broadcaster: /hector_mapping_r1\nAverage rate: 23.510 Hz\nMost recent transform: 59.135 ( 0.189 sec old)\nBuffer length: 3.658 sec\n"];
+"drone_1/base_footprint" -> "drone_1/base_stabilized"[label="Broadcaster: /drone_1/ground_truth_to_tf\nAverage rate: 100.272 Hz\nMost recent transform: 59.294 ( 0.030 sec old)\nBuffer length: 3.680 sec\n"];
+"drone_2/map" -> "scanmatcher_frame_r2"[label="Broadcaster: /hector_mapping_r2\nAverage rate: 23.510 Hz\nMost recent transform: 59.120 ( 0.204 sec old)\nBuffer length: 3.658 sec\n"];
+"drone_1/map" -> "scanmatcher_frame_r1"[label="Broadcaster: /hector_mapping_r1\nAverage rate: 23.510 Hz\nMost recent transform: 59.135 ( 0.189 sec old)\nBuffer length: 3.658 sec\n"];
+"drone_1/map" -> "map"[label="Broadcaster: /local_to_global_map_publisher_r1\nAverage rate: 20.487 Hz\nMost recent transform: 59.356 ( -0.032 sec old)\nBuffer length: 3.612 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 59.324"[ shape=plaintext ] ;
+ }->"drone_2/map";
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 59.324"[ shape=plaintext ] ;
+ }->"drone_1/map";
+}

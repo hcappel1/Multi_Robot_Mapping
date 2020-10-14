@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+
+<launch>
+	<!-- Specify parameters for turtlebot-->
+	<arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+	<arg name="first_tb3"  default="tb3_0"/>
+	<arg name="second_tb3" default="tb3_1"/>
+
+	<arg name="x_pos_1" default="-3.0"/>
+	<arg name="y_pos_1" default="1.0"/>
+	<arg name="z_pos_1" default="0.0"/>
+	<arg name="yaw_1" default="1.57"/>
+
+	<arg name="x_pos_2" default="-1.0"/>
+	<arg name="y_pos_2" default="1.0"/>
+	<arg name="z_pos_2" default="0.0"/>
+	<arg name="yaw_2" default="1.57"/>
+
+	<!-- Launch simulated world-->
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+	  <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_house.world"/>
+	  <arg name="paused" value="false"/>
+	  <arg name="use_sim_time" value="true"/>
+	  <arg name="gui" value="true"/>
+	  <arg name="headless" value="false"/>
+	  <arg name="debug" value="false"/>
+	</include>
+
+	<!-- Launch multiple robots-->
+	<group ns = "$(arg first_tb3)">
+	  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+	  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+	    <param name="publish_frequency" type="double" value="50.0" />
+	    <param name="tf_prefix" value="$(arg first_tb3)" />
+	  </node>
+	  
+	  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg first_tb3) -x $(arg x_pos_1) -y $(arg y_pos_1) -z $(arg z_pos_1) -Y $(arg yaw_1) -param robot_description" />
+
+	</group>
+
+	<group ns = "$(arg second_tb3)">
+	  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+	  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+	    <param name="publish_frequency" type="double" value="50.0" />
+	    <param name="tf_prefix" value="$(arg second_tb3)" />
+	  </node>
+
+	  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg second_tb3) -x $(arg x_pos_2) -y $(arg y_pos_2) -z $(arg z_pos_2) -Y $(arg yaw_2) -param robot_description" />
+
+	</group>
+
+	<!-- Launch SLAM robot 1-->
+	<include file="$(find r1_slam_pkg)/launch/r1_slam_tb.launch"/>
+
+	<!-- Launch move base robot 1-->
+	<include file="$(find r1_navigation_pkg)/launch/r1_navigation_tb.launch"/>
+
+	<!-- Launch SLAM robot 2-->
+	<include file="$(find r2_slam_pkg)/launch/r2_slam_tb.launch"/>
+
+	<!-- Launch move base robot 2-->
+	<include file="$(find r2_navigation_pkg)/launch/r2_navigation_tb.launch"/>
+
+	<!-- Launch map merge -->
+	<include file="$(find map_merge)/launch/map_merge_tb.launch"/>
+
+
+	<!-- Launch SLAM robot 2-->
+	<!-- <include file="$(find r2_slam_pkg)/launch/r2_slam.launch"/> -->
+
+	<!-- Launch map merging server-->
+	<!-- <include file="$(find central_server)/launch/map_merge.launch"/> -->
+
+	<!--Begin Rviz-->
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find simulation_env)/rviz/multi_turtlebot_slam.rviz"/>
+
+	<!--static transform publisher-->
+<!-- 	<node pkg="tf" type="static_transform_publisher" name="local_map_to_map_publisher"  args="0 -2 0 0 0 0 /drone_2/map /drone_1/map 100"/>
+
+	<node pkg="tf" type="static_transform_publisher" name="local_to_global_map_publisher"  args="-51.25 -51.25 0 0 0 0 /drone_1/map /map 100"/> -->
+
+	<!-- <node pkg="tf" type="static_transform_publisher" name="global_map_to_map_publisher"  args="-50 -50 0 0 0 0 /drone_2/map /map 100"/> -->
+<!-- 	<node pkg="tf" type="static_transform_publisher" name="map_to_world_publisher_r2"  args="0 0 0 0 0 0 /drone2/map /drone2/world 100"/>
+	<node pkg="tf" type="static_transform_publisher" name="map_to_world_publisher_r1"  args="0 0 0 0 0 0 /drone1/map /drone1/world 100"/> -->
+
+</launch>

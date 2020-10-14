@@ -1,0 +1,7 @@
+<launch>
+	
+	<include file="$(find hector_gazebo_worlds)/launch/willow_garage.launch"/>
+
+	<include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor_slam.launch"/>
+
+</launch>

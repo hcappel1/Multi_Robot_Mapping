@@ -1,0 +1,34 @@
+<launch>
+   <arg name="model" default="$(find hector_quadrotor_description)/urdf/quadrotor_hokuyo_utm30lx.gazebo.xacro" />
+
+   <arg name="use_ground_truth_for_tf" default="true"/>
+   <arg name="use_ground_truth_for_control" default="true"/>
+   <arg name="use_pose_estimation" if="$(arg use_ground_truth_for_control)" default="false"/>
+   <arg name="use_pose_estimation" unless="$(arg use_ground_truth_for_control)" default="true"/>
+
+   <group ns="drone_1">
+     <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch">
+       <arg name="name" value="drone1" />
+       <arg name="tf_prefix" value="drone_1" />
+       <arg name="model" value="$(arg model)" />
+       <arg name="y" value="-1.0" />
+       <arg name="use_ground_truth_for_tf" value="$(arg use_ground_truth_for_tf)"/>
+       <arg name="use_ground_truth_for_control" value="$(arg use_ground_truth_for_control)"/>
+       <arg name="use_pose_estimation" value="$(arg use_pose_estimation)"/>
+     </include>
+   </group>
+
+   <group ns="drone_2">
+     <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch">
+       <arg name="name" value="drone2" />
+       <arg name="tf_prefix" value="drone_2" />
+       <arg name="model" value="$(arg model)" />
+       <arg name="y" value="1.0" />
+       <arg name="use_ground_truth_for_tf" value="$(arg use_ground_truth_for_tf)"/>
+       <arg name="use_ground_truth_for_control" value="$(arg use_ground_truth_for_control)"/>
+       <arg name="use_pose_estimation" value="$(arg use_pose_estimation)"/>
+     </include>
+   </group>
+
+</launch>
+

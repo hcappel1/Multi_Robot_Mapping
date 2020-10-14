@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="frontier_pkg_tb" type="frontier_pts" name="frontier_pts_node" output="screen" />
+	<node pkg="frontier_pkg_tb" type="frontier_main" name="frontier_main_node" output="screen" />
+</launch>
