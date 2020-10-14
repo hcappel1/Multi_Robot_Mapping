@@ -7,6 +7,8 @@
 #include <boost/shared_ptr.hpp>
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <move_base_msgs/MoveBaseAction.h>
+#include <actionlib/client/simple_action_client.h>
 
 using namespace std;
 
@@ -16,6 +18,7 @@ public:
 	ros::ServiceClient choice_srv;
 	ros::Publisher chosen_pt_pub;
 	frontier_pkg_tb::ChoiceMsg choice_msg;
+	typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 	//choice decision variables
 	geometry_msgs::PoseStamped chosen_pt;
@@ -53,12 +56,41 @@ public:
 		else{
 			ROS_ERROR("[Could not send frontier request for robot 1]");
 		}
+		MoveBaseClient move_base_r1("move_base", true);
+
+		while (!move_base_r1.waitForServer(ros::Duration(5.0))){
+			ROS_INFO("[waiting for move base server]");
+		}
+
+		move_base_msgs::MoveBaseGoal nav_goal;
+		nav_goal.target_pose = chosen_pt;
+
+		move_base_r1.sendGoal(nav_goal);
+
+		move_base_r1.waitForResult();
+
 
 		res.success = true;
 
 
 	}
+
+	void doneCb(const actionlib::SimpleClientGoalState& state,
+				const move_base_msgs::MoveBaseResultConstPtr& result)
+	{
+		ROS_INFO("[Robot 1 has arrived at its goal]");
+	}
+
+	void activeCb()
+	{
+		ROS_INFO("[Goal is active]");
+	}
+
+	void feedbackCb(const move_base_msgs::MoveBaseFeedbackConstPtr& feedback){
+
+	}
 };
+
 
 
 int main(int argc, char **argv){
