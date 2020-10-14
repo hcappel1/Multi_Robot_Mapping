@@ -32,8 +32,8 @@ public:
 	int rank_val;
 
 	void SourceInitialization(){
-		pose.position.x = 3.5;
-		pose.position.y = 12.0;
+		pose.position.x = 9.6;
+		pose.position.y = 12.715;
 		chosen = false;
 		key = "source";
 	}
@@ -78,7 +78,7 @@ public:
 
 
 	ChooseFrontier(){
-		ROS_INFO("choose frontier object created");
+
 		frontier_pub = nh.advertise<geometry_msgs::PoseStamped>("chosen_frontier_pt", 1000);
 		frontier_pts_pub = nh.advertise<geometry_msgs::PoseArray>("frontier_queue", 1000);
 		valid_frontier_pts_pub = nh.advertise<geometry_msgs::PoseArray>("valid_frontier_queue", 1000);
@@ -142,7 +142,7 @@ public:
 				if (frontier_queue[i]->key != frontier_queue[j]->key){
 
 					double distance = sqrt(pow(frontier_queue[i]->pose.position.x - frontier_queue[j]->pose.position.x,2) + pow(frontier_queue[i]->pose.position.y - frontier_queue[j]->pose.position.y,2));
-					if (distance < 2.0){
+					if (distance < 4.0){
 						frontier_queue[i]->neighbors.push_back(frontier_queue[j]);
 					}
 				}
@@ -283,8 +283,8 @@ public:
 					valid_frontier_queue.push_back(frontier_queue[i]);
 				}
 			}
-			cout << "size of frontier queue: " << frontier_queue.size() << endl;
-			cout << "size of valid frontier queue: " << valid_frontier_queue.size() << endl;
+			cout << "Size of frontier queue: " << frontier_queue.size() << endl;
+			cout << "Size of valid frontier queue: " << valid_frontier_queue.size() << endl;
 
 			while (valid_frontier_queue.size() > 0){
 				if (valid_frontier_queue[0]->chosen == false){

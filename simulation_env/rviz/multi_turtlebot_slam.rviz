@@ -8,7 +8,6 @@ Panels:
         - /Status1
         - /Robot11
         - /Robot21
-        - /PoseArray1
       Splitter Ratio: 0.5
     Tree Height: 775
   - Class: rviz/Selection
@@ -137,7 +136,7 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 999999
+          Max Intensity: 1.85517253e-34
           Min Color: 0; 0; 0
           Min Intensity: 0
           Name: LaserScan
@@ -268,7 +267,7 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 999999
+          Max Intensity: 1.85517253e-34
           Min Color: 0; 0; 0
           Min Intensity: 0
           Name: LaserScan
@@ -341,6 +340,21 @@ Visualization Manager:
       Topic: /optimal_frontier_pts
       Unreliable: false
       Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.100000001
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.300000012
+      Head Radius: 0.100000001
+      Name: Pose
+      Shaft Length: 1
+      Shaft Radius: 0.0500000007
+      Shape: Arrow
+      Topic: /R1_chosen_frontier_pt
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -366,25 +380,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.86752272
+      Distance: 6.16375256
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -1.89459479
-        Y: 0.957036257
-        Z: 1.91742718
+        X: -4.69873095
+        Y: 1.59366393
+        Z: 2.45631814
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.704797745
+      Pitch: 1.34979653
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.67358923
+      Yaw: 4.68354654
     Saved: ~
 Window Geometry:
   Displays:

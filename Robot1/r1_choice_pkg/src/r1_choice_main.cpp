@@ -14,6 +14,7 @@ class Main{
 public:
 	ros::NodeHandle nh_;
 	ros::ServiceClient choice_srv;
+	ros::Publisher chosen_pt_pub;
 	frontier_pkg_tb::ChoiceMsg choice_msg;
 
 	//choice decision variables
@@ -25,6 +26,7 @@ public:
 	Main(){
 		ROS_INFO("[R1 main class constructed]");
 		choice_srv = nh_.serviceClient<frontier_pkg_tb::ChoiceMsg>("/choose_frontier_r1");
+		chosen_pt_pub = nh_.advertise<geometry_msgs::PoseStamped>("R1_chosen_frontier_pt", 1000);
 	}
 
 
@@ -42,6 +44,9 @@ public:
 			pass_down_frontier_received = choice_msg.response.pass_down_frontier_res;
 			pass_down_path_received = choice_msg.response.pass_down_path_res;
 			chosen_queue_received = choice_msg.response.chosen_queue_res;
+
+			cout << "size of pass down path: " << pass_down_path_received.poses.size() << endl;
+			chosen_pt_pub.publish(chosen_pt);
 
 		}
 
