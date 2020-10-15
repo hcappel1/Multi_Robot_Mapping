@@ -13,13 +13,53 @@
 
 using namespace std;
 
-class Main{
+class MoveBase{
+public:
+	typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+	geometry_msgs::PoseStamped frontier_pt;
+
+	MoveBase(geometry_msgs::PoseStamped frontier_pt_){
+		ROS_INFO("[MoveBase object constructed]");
+		frontier_pt = frontier_pt_;
+		SendGoal();
+	}
+
+	void SendGoal(){
+		MoveBaseClient move_base_r1("tb3_0/move_base", true);
+		move_base_r1.waitForServer();
+
+		move_base_msgs::MoveBaseGoal nav_goal;
+		nav_goal.target_pose = frontier_pt;
+		nav_goal.target_pose.pose.orientation.w = 1.0;
+
+		move_base_r1.sendGoal(nav_goal, boost::bind(&MoveBase::doneCb, this, _1, _2), boost::bind(&MoveBase::activeCb, this), boost::bind(&MoveBase::feedbackCb, this, _1));
+
+		//move_base_r1.waitForResult();
+	}
+
+	void doneCb(const actionlib::SimpleClientGoalState& state,
+				const move_base_msgs::MoveBaseResultConstPtr& result)
+	{
+		ROS_INFO("[Robot 1 has arrived at its goal]");
+	}
+
+	void activeCb()
+	{
+		ROS_INFO("[Goal is active]");
+	}
+
+	void feedbackCb(const move_base_msgs::MoveBaseFeedbackConstPtr& feedback){
+
+	}
+};
+
+
+class Choice{
 public:
 	ros::NodeHandle nh_;
 	ros::ServiceClient choice_srv;
 	ros::Publisher chosen_pt_pub;
 	frontier_pkg_tb::ChoiceMsg choice_msg;
-	typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 	//choice decision variables
 	geometry_msgs::PoseStamped chosen_pt;
@@ -27,8 +67,8 @@ public:
 	geometry_msgs::PoseArray pass_down_path_received;
 	vector<uint8_t> chosen_queue_received;
 
-	Main(){
-		ROS_INFO("[R1 main class constructed]");
+	Choice(){
+		ROS_INFO("[R1 choice class constructed]");
 		choice_srv = nh_.serviceClient<frontier_pkg_tb::ChoiceMsg>("/choose_frontier_r1");
 		chosen_pt_pub = nh_.advertise<geometry_msgs::PoseStamped>("R1_chosen_frontier_pt", 1000);
 	}
@@ -58,36 +98,11 @@ public:
 		else{
 			ROS_ERROR("[Could not send frontier request for robot 1]");
 		}
-		MoveBaseClient move_base_r1("tb3_0/move_base", true);
-		move_base_r1.waitForServer();
 
-		move_base_msgs::MoveBaseGoal nav_goal;
-		nav_goal.target_pose = chosen_pt;
-		nav_goal.target_pose.pose.orientation.w = 1.0;
-
-		move_base_r1.sendGoal(nav_goal, boost::bind(&Main::doneCb, this, _1, _2), boost::bind(&Main::activeCb, this), boost::bind(&Main::feedbackCb, this, _1));
-
-		//move_base_r1.waitForResult();
-
-		cout << "Keep doing some stuff" << endl;
-
+		MoveBase move_base(chosen_pt);
 
 	}
 
-	void doneCb(const actionlib::SimpleClientGoalState& state,
-				const move_base_msgs::MoveBaseResultConstPtr& result)
-	{
-		ROS_INFO("[Robot 1 has arrived at its goal]");
-	}
-
-	void activeCb()
-	{
-		ROS_INFO("[Goal is active]");
-	}
-
-	void feedbackCb(const move_base_msgs::MoveBaseFeedbackConstPtr& feedback){
-
-	}
 };
 
 
@@ -97,9 +112,9 @@ int main(int argc, char **argv){
 	ros::init(argc, argv, "R1_main_node");
 	ros::NodeHandle nh;
 
-	Main main;
+	Choice choice;
 
-	ros::ServiceServer r1_main_service = nh.advertiseService("/R1_main_service", &Main::ServiceCallback, &main);
+	ros::ServiceServer r1_main_service = nh.advertiseService("/R1_main_service", &Choice::ServiceCallback, &choice);
 
 	ros::spin();
 

@@ -128,9 +128,9 @@ target_link_libraries(r1_frontier_choice
    ${catkin_LIBRARIES}
  )
 
-add_executable(r1_choice_main src/r1_choice_main.cpp)
-add_dependencies(r1_choice_main ${r1_choice_main_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${move_base_msgs_EXPORTED_TARGETS})
-target_link_libraries(r1_choice_main
+add_executable(r1_choice_main_new src/r1_choice_main_new.cpp)
+add_dependencies(r1_choice_main_new ${r1_choice_main_new_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${move_base_msgs_EXPORTED_TARGETS})
+target_link_libraries(r1_choice_main_new
   ${catkin_LIBRARIES}
 )
 

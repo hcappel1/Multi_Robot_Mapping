@@ -1,4 +1,4 @@
 <launch>
 	<node pkg="r1_choice_pkg" type="r1_frontier_choice" name="r1_frontier_choice_node" output="screen" />
-	<node pkg="r1_choice_pkg" type="r1_choice_main" name="r1_choice_main_node" output="screen" />
+	<node pkg="r1_choice_pkg" type="r1_choice_main_new" name="r1_choice_main_node" output="screen" />
 </launch>
