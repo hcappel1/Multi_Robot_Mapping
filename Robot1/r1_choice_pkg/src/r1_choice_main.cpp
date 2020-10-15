@@ -56,14 +56,12 @@ public:
 		else{
 			ROS_ERROR("[Could not send frontier request for robot 1]");
 		}
-		MoveBaseClient move_base_r1("move_base", true);
-
-		while (!move_base_r1.waitForServer(ros::Duration(5.0))){
-			ROS_INFO("[waiting for move base server]");
-		}
+		MoveBaseClient move_base_r1("tb3_0/move_base", true);
+		move_base_r1.waitForServer();
 
 		move_base_msgs::MoveBaseGoal nav_goal;
 		nav_goal.target_pose = chosen_pt;
+		nav_goal.target_pose.pose.orientation.w = 1.0;
 
 		move_base_r1.sendGoal(nav_goal);
 

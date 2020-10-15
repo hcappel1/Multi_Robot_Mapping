@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(r1_choice_pkg)
+project(action_server_test)
 
-# Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+## Compile as C++11, supported in ROS Kinetic and newer
+# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -10,9 +10,8 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
-  frontier_pkg_tb
-  actionlib_msgs
   actionlib
+  actionlib_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -106,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES r1_choice_pkg
+#  LIBRARIES action_server_test
  CATKIN_DEPENDS roscpp rospy
 #  DEPENDS system_lib
 )
@@ -122,35 +121,23 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(r1_frontier_choice src/r1_frontier_choice.cpp)
-add_dependencies(r1_frontier_choice ${r1_frontier_choice_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(r1_frontier_choice
-   ${catkin_LIBRARIES}
- )
+add_executable(fibonacci_client src/fibonacci_client.cpp)
 
-add_executable(r1_choice_main src/r1_choice_main.cpp)
-add_dependencies(r1_choice_main ${r1_choice_main_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${move_base_msgs_EXPORTED_TARGETS})
-target_link_libraries(r1_choice_main
+target_link_libraries( 
+  fibonacci_client
   ${catkin_LIBRARIES}
 )
 
-# add_executable(test_action_server src/test_action_server.cpp)
-# add_dependencies(
-#   test_action_server 
-#   ${move_base_msgs_EXPORTED_TARGETS}
-#   ${test_action_server_EXPORTED_TARGETS} 
-#   ${catkin_EXPORTED_TARGETS}
-
-# )
-
-# target_link_libraries(
-#   test_action_server
-#   ${catkin_LIBRARIES}
-#  )
+add_dependencies(
+  fibonacci_client
+  ${fibonacci_client_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  ${actionlib_tutorials_EXPORTED_TARGETS}
+)
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/r1_choice_pkg.cpp
+#   src/${PROJECT_NAME}/action_server_test.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -161,7 +148,7 @@ target_link_libraries(r1_choice_main
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/r1_choice_pkg_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/action_server_test_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -225,7 +212,7 @@ target_link_libraries(r1_choice_main
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_r1_choice_pkg.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_action_server_test.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
