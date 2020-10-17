@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="r1_main_pkg" type="r1_choice_srv" name="r1_choice_srv_node" output="screen" />
+	<node pkg="r1_main_pkg" type="r1_main" name="r1_main_node" output="screen" />
+</launch>
