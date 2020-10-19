@@ -38,7 +38,6 @@ public:
 	}
 
 	void SendActionRequest(){
-		//PassDownClient pass_down_r2("R2_main_action_server");
 		pass_down_r2.waitForServer();
 
 		r1_main_pkg::PassDownGoal msg;
@@ -82,7 +81,6 @@ public:
 	}
 
 	void SendGoal(){
-		//MoveBaseClient move_base_r1("tb3_0/move_base", true);
 		move_base_r1.waitForServer();
 
 		move_base_msgs::MoveBaseGoal nav_goal;
@@ -90,8 +88,6 @@ public:
 		nav_goal.target_pose.pose.orientation.w = 1.0;
 
 		move_base_r1.sendGoal(nav_goal, boost::bind(&MoveBase::doneCb, this, _1, _2), boost::bind(&MoveBase::activeCb, this), boost::bind(&MoveBase::feedbackCb, this, _1));
-
-		//move_base_r1.waitForResult();
 	}
 
 	void doneCb(const actionlib::SimpleClientGoalState& state,
@@ -192,7 +188,6 @@ public:
 			actionlib::SimpleClientGoalState move_base_state = move_base.move_base_r1.getState();
 			actionlib::SimpleClientGoalState pass_down_state = pass_down.pass_down_r2.getState();
 
-			//ROS_INFO("Current state of move base robot 1: %s", move_base_state.toString().c_str());
 
 			if (as_.isPreemptRequested()){
 				ROS_INFO("[%s: Preempted]", action_name_.c_str());
@@ -200,8 +195,7 @@ public:
 				success = false;
 				break;
 			}
-			else if (move_base_state.toString() == "SUCCEEDED"){
-				ROS_INFO("[Robot 1 completion]");
+			else if (move_base_state.toString() == "SUCCEEDED" && pass_down_state.toString() == "SUCCEEDED"){
 				success = true;
 				result_.success = success;
 				ROS_INFO("[%s: Succeeded]", action_name_.c_str());

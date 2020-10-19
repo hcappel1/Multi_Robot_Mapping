@@ -99,7 +99,7 @@ int main(int argc, char **argv){
 		actionlib::SimpleClientGoalState pass_down_state = pass_down.pass_down_r1.getState();
 
 		if (pass_down_state.toString() == "SUCCEEDED"){
-			ROS_INFO("[Robot 1 has full completion]");
+			ROS_INFO("[Robots have completed iteration]");
 			break;
 		}
 	}
