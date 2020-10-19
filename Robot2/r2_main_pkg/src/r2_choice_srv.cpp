@@ -142,7 +142,7 @@ public:
 				if (frontier_queue[i]->key != frontier_queue[j]->key){
 
 					double distance = sqrt(pow(frontier_queue[i]->pose.position.x - frontier_queue[j]->pose.position.x,2) + pow(frontier_queue[i]->pose.position.y - frontier_queue[j]->pose.position.y,2));
-					if (distance < 4.0){
+					if (distance < 7.0){
 						frontier_queue[i]->neighbors.push_back(frontier_queue[j]);
 					}
 				}

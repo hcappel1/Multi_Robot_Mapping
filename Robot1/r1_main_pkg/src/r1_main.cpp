@@ -16,15 +16,20 @@
 
 using namespace std;
 
+typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+typedef actionlib::SimpleActionClient<r1_main_pkg::PassDownAction> PassDownClient;
+
 class PassDown{
 public:
-	typedef actionlib::SimpleActionClient<r1_main_pkg::PassDownAction> PassDownClient;
+
+	PassDownClient pass_down_r2;
 	geometry_msgs::PoseArray pass_down_frontier_send_;
 	geometry_msgs::PoseArray pass_down_path_send_;
 	vector<uint8_t> chosen_queue_send_;
 	int robots_remaining_send_;
 
-	PassDown(geometry_msgs::PoseArray pass_down_frontier_send, geometry_msgs::PoseArray pass_down_path_send, vector<uint8_t> chosen_queue_send, int robots_remaining_send){
+	PassDown(geometry_msgs::PoseArray pass_down_frontier_send, geometry_msgs::PoseArray pass_down_path_send, vector<uint8_t> chosen_queue_send, int robots_remaining_send) : pass_down_r2("R2_main_action_server", true)
+	{
 		pass_down_frontier_send_ = pass_down_frontier_send;
 		pass_down_path_send_ = pass_down_path_send;
 		chosen_queue_send_ = chosen_queue_send;
@@ -33,7 +38,7 @@ public:
 	}
 
 	void SendActionRequest(){
-		PassDownClient pass_down_r2("R2_main_action_server");
+		//PassDownClient pass_down_r2("R2_main_action_server");
 		pass_down_r2.waitForServer();
 
 		r1_main_pkg::PassDownGoal msg;
@@ -63,18 +68,21 @@ public:
 
 class MoveBase{
 public:
-	typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+
+	MoveBaseClient move_base_r1;
 	geometry_msgs::PoseStamped frontier_pt;
 	bool nav_completion;
 
-	MoveBase(geometry_msgs::PoseStamped frontier_pt_){
+	MoveBase(geometry_msgs::PoseStamped frontier_pt_) : move_base_r1("tb3_0/move_base", true)
+	{
 		ROS_INFO("[MoveBase object constructed]");
+		MoveBaseClient move_base_r1("tb3_0/move_base", true);
 		frontier_pt = frontier_pt_;
 		SendGoal();
 	}
 
 	void SendGoal(){
-		MoveBaseClient move_base_r1("tb3_0/move_base", true);
+		//MoveBaseClient move_base_r1("tb3_0/move_base", true);
 		move_base_r1.waitForServer();
 
 		move_base_msgs::MoveBaseGoal nav_goal;
@@ -83,7 +91,7 @@ public:
 
 		move_base_r1.sendGoal(nav_goal, boost::bind(&MoveBase::doneCb, this, _1, _2), boost::bind(&MoveBase::activeCb, this), boost::bind(&MoveBase::feedbackCb, this, _1));
 
-		move_base_r1.waitForResult();
+		//move_base_r1.waitForResult();
 	}
 
 	void doneCb(const actionlib::SimpleClientGoalState& state,
@@ -179,18 +187,34 @@ public:
 		PassDown pass_down(pass_down_frontier_send, pass_down_path_send, chosen_queue_send, robots_remaining_received-1);
 		MoveBase move_base(chosen_pt);
 
-		if (as_.isPreemptRequested() || !ros::ok()){
-			ROS_INFO("[%s: Preempted]", action_name_.c_str());
-			as_.setPreempted();
-			success = false;
-		}
-		else{
-			success = true;
+		while (ros::ok()){
+
+			actionlib::SimpleClientGoalState move_base_state = move_base.move_base_r1.getState();
+			actionlib::SimpleClientGoalState pass_down_state = pass_down.pass_down_r2.getState();
+
+			//ROS_INFO("Current state of move base robot 1: %s", move_base_state.toString().c_str());
+
+			if (as_.isPreemptRequested()){
+				ROS_INFO("[%s: Preempted]", action_name_.c_str());
+				as_.setPreempted();
+				success = false;
+				break;
+			}
+			else if (move_base_state.toString() == "SUCCEEDED"){
+				ROS_INFO("[Robot 1 completion]");
+				success = true;
+				result_.success = success;
+				ROS_INFO("[%s: Succeeded]", action_name_.c_str());
+				as_.setSucceeded(result_);
+				break;
+
+			}
+			else{
+				continue;
+			}
+
 		}
 
-		result_.success = success;
-		ROS_INFO("[%s: Succeeded]", action_name_.c_str());
-		as_.setSucceeded(result_);
 	}
 };
 

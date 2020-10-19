@@ -51,16 +51,17 @@ public:
 class PassDown{
 public:
 	typedef actionlib::SimpleActionClient<r1_main_pkg::PassDownAction> PassDownClient;
+	PassDownClient pass_down_r1;
 	geometry_msgs::PoseArray pass_down_frontier_send;
 	geometry_msgs::PoseArray pass_down_path_send;
 
-	PassDown(geometry_msgs::PoseArray frontier_pts_){
+	PassDown(geometry_msgs::PoseArray frontier_pts_) : pass_down_r1("R1_main_action_server")
+	{
 		pass_down_frontier_send = frontier_pts_;
 		SendActionRequest();
 	}
 
 	void SendActionRequest(){
-		PassDownClient pass_down_r1("R1_main_action_server");
 		pass_down_r1.waitForServer();
 
 		r1_main_pkg::PassDownGoal msg;
@@ -93,6 +94,15 @@ int main(int argc, char **argv){
 
 	FrontierPts frontier_pts;
 	PassDown pass_down(frontier_pts.frontier_pts_);
+
+	while (ros::ok()){
+		actionlib::SimpleClientGoalState pass_down_state = pass_down.pass_down_r1.getState();
+
+		if (pass_down_state.toString() == "SUCCEEDED"){
+			ROS_INFO("[Robot 1 has full completion]");
+			break;
+		}
+	}
 
 	ros::spin();
 
