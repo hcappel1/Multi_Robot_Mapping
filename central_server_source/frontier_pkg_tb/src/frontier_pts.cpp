@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <vector>
 #include <iostream>
 #include <memory>
@@ -61,6 +62,9 @@ private:
 	double x_trans = map_width/2;
 	double y_trans = map_height/2;
 	double theta = -1.57;
+
+	//frontier filtering information
+	int frontier_thresh = 5;
 	// Eigen::MatrixXf map_odom_transform(3, 3);
 	// map_odom_transform << cos(theta), -sin(theta), x_trans, -sin(theta), cos(theta), y_trans, 0.0, 0.0, 1.0;
 	// map_odom_transform(0,0) = cos(theta);
@@ -76,6 +80,7 @@ private:
 
 	ros::NodeHandle nh;
 	ros::Publisher frontier_pub;
+	ros::Publisher optimal_pub;
 	ros::Subscriber	odom_sub;
 
 	vector< shared_ptr<Node> > map_node;
@@ -102,10 +107,12 @@ public:
 	geometry_msgs::PoseArray frontier_array;
 	geometry_msgs::PoseArray optimal_frontier_pts;
 	geometry_msgs::Pose node_pose;
+	geometry_msgs::PoseStamped optimal_frontier_pt;
 	
 	Frontier(){
 		ROS_INFO("created frontier object");
 		frontier_pub = nh.advertise<geometry_msgs::PoseArray>("frontier_pts", 1000);
+		optimal_pub = nh.advertise<geometry_msgs::PoseStamped>("optimal_frontier_pt", 1000);
 	}
 
 
@@ -116,6 +123,7 @@ public:
 		DoFrontier();
 		SortFrontierArray();
 		OptimalFrontierPts();
+		//FrontierArrayTest(frontier_list);
 
 		res.optimal_frontier_pts = optimal_frontier_pts;
 		res.success = true;
@@ -128,7 +136,7 @@ public:
 		init_pose_obj = *init_pose;
 
 		init_pose_obj.pose.pose.position.x = 11.129;
-		init_pose_obj.pose.pose.position.y = 14.2085;
+		init_pose_obj.pose.pose.position.y = 13.2085;
 
 	}
 
@@ -292,6 +300,41 @@ public:
 		return false;
 	}
 
+	void GetAngle(shared_ptr<Node> current_node){
+
+		int iter = 0;
+		double x_pos_tot = 0.0;
+		double y_pos_tot = 0.0;
+		double x_pos_avg = 0.0;
+		double y_pos_avg = 0.0;
+
+		for (int i = 0; i < current_node->neighbors.size(); i++){
+			if (current_node->neighbors[i]->map_val == -1){
+				x_pos_tot += current_node->neighbors[i]->pose.position.x;
+				y_pos_tot += current_node->neighbors[i]->pose.position.y;
+				iter++;
+			}
+		}
+		x_pos_avg = x_pos_tot/iter;
+		y_pos_avg = y_pos_tot/iter;
+		double yaw = atan2(y_pos_avg - current_node->pose.position.y, x_pos_avg - current_node->pose.position.x);
+		double roll;
+		double pitch;
+
+		double cy = cos(yaw*0.5);
+		double sy = sin(yaw*0.5);
+		double cp = cos(pitch*0.5);
+		double sp = sin(pitch*0.5);
+		double cr = cos(roll*0.5);
+		double sr = sin(roll*0.5);
+
+		current_node->pose.orientation.w = cr*cp*cy+sr*sp*sy;
+		current_node->pose.orientation.x = sr*cp*cy-cr*sp*sy;
+		current_node->pose.orientation.y = cr*sp*cy+sr*cp*sy;
+		current_node->pose.orientation.z = cr*cp*sy-sr*sp*cy;
+
+	}
+
 	void DoFrontier()
 	{
 		SetInitPose();
@@ -323,6 +366,7 @@ public:
 						continue;
 					}
 					else if (FrontierDetermination(current_node_frontier) == true){
+						GetAngle(current_node_frontier);
 						new_frontier.push_back(current_node_frontier);
 
 						for (int i = 0; i < current_node_frontier->neighbors.size(); i++){
@@ -368,9 +412,14 @@ public:
 	}
 
 	void OptimalFrontierPts(){
+
 		for (int i = 0; i < frontier_list.size(); i++){
-			int median_val = int(frontier_list[i].size()/2);
-			optimal_frontier_pts.poses.push_back(frontier_list[i][median_val]->pose);
+			
+			if (frontier_list[i].size() > frontier_thresh){
+				int median_val = int(frontier_list[i].size()/2);
+				optimal_frontier_pts.poses.push_back(frontier_list[i][median_val]->pose);
+			}
+			
 		}
 	}
 
@@ -404,18 +453,26 @@ public:
 
 	void FrontierArrayTest(vector<vector< shared_ptr<Node> > > frontier_list){
 
-		for (int i = 0; i < frontier_list.size(); i++){
-			for (int j = 0; j < frontier_list[i].size(); j++){
-				frontier_array.poses.push_back(frontier_list[i][j]->pose);
-			}
+		// for (int i = 0; i < frontier_list.size(); i++){
+		// 	for (int j = 0; j < frontier_list[i].size(); j++){
+		// 		frontier_array.poses.push_back(frontier_list[i][j]->pose);
+		// 	}
+		// }
+
+		for (int i = 0; i < frontier_list[0].size(); i++){
+			frontier_array.poses.push_back(frontier_list[0][i]->pose);
 		}
 
-		cout << "size of frontier array: " << frontier_array.poses.size() << endl;
+		// cout << "size of frontier array: " << frontier_array.poses.size() << endl;
 		frontier_array.header.frame_id = "map";
 		frontier_array.header.stamp = ros::Time::now();
-		while (ros::ok()){
-			frontier_pub.publish(frontier_array);
-		}
+		frontier_pub.publish(frontier_array);
+		optimal_frontier_pt.header.frame_id = "map";
+		optimal_frontier_pt.header.stamp = ros::Time::now();
+		optimal_frontier_pt.pose = optimal_frontier_pts.poses[0];
+		optimal_pub.publish(optimal_frontier_pt);
+
+
 	}
 
 	void OptimalFrontierPtsTest(){

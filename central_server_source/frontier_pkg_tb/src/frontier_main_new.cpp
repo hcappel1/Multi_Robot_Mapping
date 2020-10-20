@@ -95,14 +95,13 @@ int main(int argc, char **argv){
 	FrontierPts frontier_pts;
 	PassDown pass_down(frontier_pts.frontier_pts_);
 
-	while (ros::ok()){
-		actionlib::SimpleClientGoalState pass_down_state = pass_down.pass_down_r1.getState();
+	
+	actionlib::SimpleClientGoalState pass_down_state = pass_down.pass_down_r1.getState();
 
-		if (pass_down_state.toString() == "SUCCEEDED"){
-			ROS_INFO("[Robots have completed iteration]");
-			break;
-		}
+	if (pass_down_state.toString() == "SUCCEEDED"){
+		ROS_INFO("[Robots have completed iteration]");
 	}
+	
 
 	ros::spin();
 

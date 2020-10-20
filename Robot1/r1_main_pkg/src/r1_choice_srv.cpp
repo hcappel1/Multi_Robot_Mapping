@@ -32,8 +32,8 @@ public:
 	int rank_val;
 
 	void SourceInitialization(){
-		pose.position.x = 9.6;
-		pose.position.y = 12.715;
+		pose.position.x = 11.129;
+		pose.position.y = 14.2085;
 		chosen = false;
 		key = "source";
 	}
@@ -110,7 +110,7 @@ public:
 
 			shared_ptr<FrontierPt> new_frontier_pt = shared_ptr<FrontierPt>( new FrontierPt );
 			new_frontier_pt->pose = pass_down_frontier.poses[i];
-			new_frontier_pt->pose.orientation.w = 1.0;
+			//new_frontier_pt->pose.orientation.w = 1.0;
 			new_frontier_pt->key = (to_string(pass_down_frontier.poses[i].position.x) + "-" + to_string(pass_down_frontier.poses[i].position.y));
 			new_frontier_pt->rank_val = i + 1; 
 			if (chosen_queue[i] == '1'){
