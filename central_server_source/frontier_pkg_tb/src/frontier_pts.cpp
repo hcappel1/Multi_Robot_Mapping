@@ -36,6 +36,7 @@ class Node{
         vector< shared_ptr<Node>> neighbors;
         int row;
         int col;
+        double optimal_heuristic;
 
         void CommonInitialization(){
         	pose.position.x = 0.0;
@@ -411,7 +412,15 @@ public:
 		std::sort(frontier_list.begin(), frontier_list.end(), &SortFunction);
 	}
 
-	void OptimalFrontierPts(){
+	static bool SortFunctionOptimal( const shared_ptr<Node> n1, const shared_ptr<Node> n2){
+		return n1->optimal_heuristic < n2->optimal_heuristic;
+	}
+
+	void SortOptimalFrontier(vector< shared_ptr<Node> > &frontier_array){
+		std::sort(frontier_array.begin(), frontier_array.end(), &SortFunctionOptimal);
+	}
+
+	void OptimalFrontierPtsOld(){
 
 		for (int i = 0; i < frontier_list.size(); i++){
 			
@@ -421,6 +430,41 @@ public:
 			}
 			
 		}
+	}
+
+	void OptimalFrontierPts(){
+
+		for (int i = 0; i < frontier_list.size(); i++){
+			if (frontier_list[i].size() > frontier_thresh){
+
+				double x_pos_tot = 0.0;
+				double y_pos_tot = 0.0;
+				double x_pos_avg = 0.0;
+				double y_pos_avg = 0.0;
+				int iter = 0;
+
+				for (int j = 0; j < frontier_list[i].size(); j++){
+					x_pos_tot += frontier_list[i][j]->pose.position.x;
+					y_pos_tot += frontier_list[i][j]->pose.position.y;
+					iter++;
+				}
+
+				x_pos_avg = x_pos_tot/iter;
+				y_pos_avg = y_pos_tot/iter;
+
+				for (int k = 0; k < frontier_list[i].size(); k++){
+					double heuristic = sqrt(pow(x_pos_avg - frontier_list[i][k]->pose.position.x,2) + pow(y_pos_avg - frontier_list[i][k]->pose.position.y,2));
+					frontier_list[i][k]->optimal_heuristic = heuristic;
+				}
+
+				SortOptimalFrontier(frontier_list[i]);
+				optimal_frontier_pts.poses.push_back(frontier_list[i][0]->pose);
+
+
+			}
+		}
+
+
 	}
 
 	void NodeValuesTest(){
