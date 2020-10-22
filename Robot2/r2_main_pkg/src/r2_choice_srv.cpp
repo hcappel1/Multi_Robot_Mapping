@@ -102,6 +102,9 @@ public:
 		res.pass_down_path_res = pass_down_path_msg;
 		res.chosen_queue_res = chosen_queue;
 		res.success = true;
+
+		ClearData();
+		return true;
 	}
 
 	void CreateFrontierQueue(){
@@ -346,6 +349,20 @@ public:
 			}
 		}
 
+	}
+
+	void ClearData(){
+		pass_down_path_vec.clear();
+		frontier_queue.clear();
+		valid_frontier_queue.clear();
+		source_paths.clear();
+		filtered_paths.clear();
+		optimal_path.clear();
+		optimal_path_res.poses.clear();
+		pass_down_path_res.clear();
+		pass_down_frontier_res.clear();
+		pass_down_path_msg.poses.clear();
+		pass_down_frontier_msg.poses.clear();
 	}
 
 	void NeighborsTest(){

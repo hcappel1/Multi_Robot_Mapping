@@ -185,8 +185,6 @@ public:
 		    pose_array.poses.push_back(new_node->pose);
 	    }
 
-	    cout << "size of map_node: " << map_node.size() << endl;
-
 
 	}
 
