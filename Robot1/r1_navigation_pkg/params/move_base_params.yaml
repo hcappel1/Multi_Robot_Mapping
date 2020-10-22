@@ -7,3 +7,4 @@ planner_frequency: 5.0
 oscillation_timeout: 0.0
 oscillation_distance: 0.2
 recovery_behavior_enabled: true
+recovery_behaviors: [{name: rotate_recovery, type: rotate_recovery/RotateRecovery}, {name: aggressive_reset, type: clear_costmap_recovery/ClearCostmapRecovery}]

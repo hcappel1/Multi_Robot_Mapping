@@ -117,10 +117,12 @@ public:
 	}
 
 
+
 	bool MapCallback(frontier_pkg_tb::FrontierMsg::Request &req,
 					 frontier_pkg_tb::FrontierMsg::Response &res)
 	{
 		map_raw = req.map_data.data;
+
 		DoFrontier();
 		SortFrontierArray();
 		OptimalFrontierPts();
@@ -128,6 +130,8 @@ public:
 
 		res.optimal_frontier_pts = optimal_frontier_pts;
 		res.success = true;
+
+		ClearData();
 
 		return true;
 	}
@@ -180,6 +184,8 @@ public:
 
 		    pose_array.poses.push_back(new_node->pose);
 	    }
+
+	    cout << "size of map_node: " << map_node.size() << endl;
 
 
 	}
@@ -334,6 +340,19 @@ public:
 		current_node->pose.orientation.y = cr*sp*cy+sr*cp*sy;
 		current_node->pose.orientation.z = cr*cp*sy-sr*sp*cy;
 
+	}
+
+	void ClearData()
+	{
+		map_raw.clear();
+		map_queue.clear();
+		map_node.clear();
+		frontier_queue.clear();
+		new_frontier.clear();
+		pose_array.poses.clear();
+		frontier_array.poses.clear();
+		optimal_frontier_pts.poses.clear();
+		frontier_list.clear();
 	}
 
 	void DoFrontier()

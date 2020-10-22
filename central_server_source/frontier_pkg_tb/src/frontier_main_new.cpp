@@ -20,12 +20,41 @@ public:
 
 	ros::Publisher frontier_pub;
 	ros::ServiceClient frontier_client;
+	ros::Subscriber map_sub;
 
 	frontier_pkg_tb::FrontierMsg frontier_srv;
+
 
 	FrontierPts(){
 		frontier_pub = nh_.advertise<geometry_msgs::PoseArray>("/global_frontier_pts", 1000);
 		frontier_client = nh_.serviceClient<frontier_pkg_tb::FrontierMsg>("/frontier_pts");
+		GetFrontierPts();
+	}
+
+	~FrontierPts(){
+		
+	}
+
+	void MapCallBack(const nav_msgs::OccupancyGrid::ConstPtr& msg){
+		map_msg_sub = *msg;
+	}
+
+	bool MapConsistency(){
+		for (int i = 0; i < map_msg->data.size(); i++){
+			if (map_msg->data[i] != map_msg->data[i]){
+				return false;
+			}
+			else{
+				continue;
+			}
+		}
+		return true;
+	}
+
+	void Reinitialize(){
+		frontier_pub = nh_.advertise<geometry_msgs::PoseArray>("/global_frontier_pts", 1000);
+		frontier_client = nh_.serviceClient<frontier_pkg_tb::FrontierMsg>("/frontier_pts");
+		frontier_pts_.poses.clear();
 		GetFrontierPts();
 	}
 
@@ -61,6 +90,17 @@ public:
 		SendActionRequest();
 	}
 
+	~PassDown(){
+
+	}
+
+	void Reinitialize(geometry_msgs::PoseArray frontier_pts_)
+	{
+		pass_down_frontier_send = frontier_pts_;
+		pass_down_path_send.poses.clear();
+		SendActionRequest();
+	}
+
 	void SendActionRequest(){
 		pass_down_r1.waitForServer();
 
@@ -92,15 +132,29 @@ public:
 int main(int argc, char **argv){
 	ros::init(argc, argv, "CC_main_node");
 
-	FrontierPts frontier_pts;
-	PassDown pass_down(frontier_pts.frontier_pts_);
-
+	FrontierPts *frontier_pts;
+	frontier_pts = new FrontierPts();
+	PassDown *pass_down;
+	pass_down = new PassDown(frontier_pts->frontier_pts_);
 	
-	actionlib::SimpleClientGoalState pass_down_state = pass_down.pass_down_r1.getState();
 
-	if (pass_down_state.toString() == "SUCCEEDED"){
-		ROS_INFO("[Robots have completed iteration]");
+
+
+	while (ros::ok()){
+		actionlib::SimpleClientGoalState pass_down_state = pass_down->pass_down_r1.getState();
+
+		if (pass_down_state.toString() == "SUCCEEDED"){
+			ROS_INFO("[Robots have completed iteration]");
+
+			ros::Duration(1.0);
+
+			frontier_pts->Reinitialize();
+			pass_down->Reinitialize(frontier_pts->frontier_pts_);
+		}
 	}
+
+	delete frontier_pts;
+	delete pass_down;
 	
 
 	ros::spin();

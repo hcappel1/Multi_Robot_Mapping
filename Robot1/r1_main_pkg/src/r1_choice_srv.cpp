@@ -73,6 +73,9 @@ private:
 	geometry_msgs::PoseArray pass_down_path_msg;
 	geometry_msgs::PoseArray pass_down_frontier_msg;
 
+	//tuning variables
+	double neighbor_dist_thresh = 5.0;
+
 
 public:
 
@@ -142,7 +145,7 @@ public:
 				if (frontier_queue[i]->key != frontier_queue[j]->key){
 
 					double distance = sqrt(pow(frontier_queue[i]->pose.position.x - frontier_queue[j]->pose.position.x,2) + pow(frontier_queue[i]->pose.position.y - frontier_queue[j]->pose.position.y,2));
-					if (distance < 7.0){
+					if (distance < neighbor_dist_thresh){
 						frontier_queue[i]->neighbors.push_back(frontier_queue[j]);
 					}
 				}
@@ -259,6 +262,7 @@ public:
 			input_vec.erase(input_vec.begin());
 		}
 	}
+
 
 	void ChooseFrontierPoint()
 	{
