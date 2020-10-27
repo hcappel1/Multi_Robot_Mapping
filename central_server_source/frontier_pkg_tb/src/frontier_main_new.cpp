@@ -35,21 +35,6 @@ public:
 		
 	}
 
-	void MapCallBack(const nav_msgs::OccupancyGrid::ConstPtr& msg){
-		map_msg_sub = *msg;
-	}
-
-	bool MapConsistency(){
-		for (int i = 0; i < map_msg->data.size(); i++){
-			if (map_msg->data[i] != map_msg->data[i]){
-				return false;
-			}
-			else{
-				continue;
-			}
-		}
-		return true;
-	}
 
 	void Reinitialize(){
 		frontier_pub = nh_.advertise<geometry_msgs::PoseArray>("/global_frontier_pts", 1000);
@@ -110,6 +95,7 @@ public:
 		msg.pass_down_path_req = pass_down_path_send;
 		msg.chosen_queue_req = init_chosen_queue;
 		msg.robots_remaining = 2;
+		msg.backup = false;
 
 		pass_down_r1.sendGoal(msg, boost::bind(&PassDown::doneCb, this, _1, _2), boost::bind(&PassDown::activeCb, this));
 	}

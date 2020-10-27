@@ -65,7 +65,7 @@ private:
 	double theta = -1.57;
 
 	//frontier filtering information
-	int frontier_thresh = 5;
+	int frontier_thresh = 15;
 	// Eigen::MatrixXf map_odom_transform(3, 3);
 	// map_odom_transform << cos(theta), -sin(theta), x_trans, -sin(theta), cos(theta), y_trans, 0.0, 0.0, 1.0;
 	// map_odom_transform(0,0) = cos(theta);

@@ -1,4 +1,4 @@
 <launch>
-	<node pkg="r2_main_pkg" type="r2_choice_srv" name="r2_choice_srv_node" output="screen" />
+	<node pkg="r2_main_pkg" type="r2_choice_srv_new" name="r2_choice_srv_node" output="screen" />
 	<node pkg="r2_main_pkg" type="r2_main" name="r2_main_node" output="screen" />
 </launch>

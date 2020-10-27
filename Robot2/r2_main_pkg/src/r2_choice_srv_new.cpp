@@ -39,45 +39,49 @@ public:
 	}
 };
 
-class ChooseFrontier{
+class ChooseFrontierMain{
 
 private:
+	//ros variables
 	ros::NodeHandle nh;
 	ros::Publisher frontier_pub;
 	ros::Publisher frontier_pts_pub;
 	ros::Publisher valid_frontier_pts_pub;
 	ros::Publisher paths_test_pub;
 
+	//service request variables
 	geometry_msgs::PoseArray pass_down_frontier;
 	geometry_msgs::PoseArray pass_down_path;
+	int robots_remaining;
 	vector< uint8_t > chosen_queue;
-	vector< shared_ptr<FrontierPt> > pass_down_path_vec;
+	bool backup_receive;
+
+	//main frontier choice variables
+	vector< shared_ptr<FrontierPt> > path_queue;
 	vector< shared_ptr<FrontierPt> > frontier_queue;
 	vector< shared_ptr<FrontierPt> > valid_frontier_queue;
 	vector<vector< shared_ptr<FrontierPt> >> source_paths;
 	vector<vector< shared_ptr<FrontierPt> >> filtered_paths;
 	vector< shared_ptr<FrontierPt> > optimal_path;
-	geometry_msgs::PoseArray optimal_path_res;
-	int robots_remaining;
-
 	shared_ptr<FrontierPt> candidate_pt;
+	double neighbor_dist_thresh = 5.0;
 
 	//service response variables
 	shared_ptr<FrontierPt> chosen_pt;
 	vector< shared_ptr<FrontierPt> > pass_down_path_res;
 	vector< shared_ptr<FrontierPt> > pass_down_frontier_res;
-	//vector< uint8_t > chosen_queue_res;
 
 	//message conversion variables
 	geometry_msgs::PoseStamped chosen_pt_msg;
 	geometry_msgs::PoseArray pass_down_path_msg;
 	geometry_msgs::PoseArray pass_down_frontier_msg;
+	bool backup_send;
 
 
 public:
 
 
-	ChooseFrontier(){
+	ChooseFrontierMain(){
 
 		frontier_pub = nh.advertise<geometry_msgs::PoseStamped>("chosen_frontier_pt", 1000);
 		frontier_pts_pub = nh.advertise<geometry_msgs::PoseArray>("frontier_queue", 1000);
@@ -93,6 +97,7 @@ public:
 		pass_down_path = req.pass_down_path_req;
 		robots_remaining = req.robots_remaining;
 		chosen_queue = req.chosen_queue_req;
+		backup_receive = req.backup_req;
 		
 		ChooseFrontierPoint();
 		ConvertToMessage();
@@ -101,6 +106,7 @@ public:
 		res.pass_down_frontier_res = pass_down_frontier_msg;
 		res.pass_down_path_res = pass_down_path_msg;
 		res.chosen_queue_res = chosen_queue;
+		res.backup_res = backup_send;
 		res.success = true;
 
 		ClearData();
@@ -113,7 +119,6 @@ public:
 
 			shared_ptr<FrontierPt> new_frontier_pt = shared_ptr<FrontierPt>( new FrontierPt );
 			new_frontier_pt->pose = pass_down_frontier.poses[i];
-			//new_frontier_pt->pose.orientation.w = 1.0;
 			new_frontier_pt->key = (to_string(pass_down_frontier.poses[i].position.x) + "-" + to_string(pass_down_frontier.poses[i].position.y));
 			new_frontier_pt->rank_val = i + 1; 
 			if (chosen_queue[i] == '1'){
@@ -126,14 +131,25 @@ public:
 		frontier_queue.push_back(source);
 	}
 
-	void CreatePathQueue(){
+	void CreatePathQueueOld(){
 
 		for (int i = 0; i < pass_down_path.poses.size(); i++){
 			for (int j = 0; j < frontier_queue.size(); j++){
 				if (abs(pass_down_path.poses[i].position.x - frontier_queue[j]->pose.position.x) < 0.0001 && abs(pass_down_path.poses[i].position.y - frontier_queue[j]->pose.position.y) < 0.0001){
-					pass_down_path_vec.push_back(frontier_queue[j]);
+					path_queue.push_back(frontier_queue[j]);
 				}
 			}
+		}
+	}
+
+	void CreatePathQueue(){
+
+		for (int i = 0; i < pass_down_path.poses.size(); i++){
+			shared_ptr<FrontierPt> new_frontier_pt = shared_ptr<FrontierPt>( new FrontierPt );
+			new_frontier_pt->pose = pass_down_path.poses[i];
+			new_frontier_pt->key = (to_string(pass_down_path.poses[i].position.x) + "-" + to_string(pass_down_path.poses[i].position.y));
+			new_frontier_pt->chosen = false;
+			path_queue.push_back(new_frontier_pt);
 		}
 	}
 
@@ -145,7 +161,7 @@ public:
 				if (frontier_queue[i]->key != frontier_queue[j]->key){
 
 					double distance = sqrt(pow(frontier_queue[i]->pose.position.x - frontier_queue[j]->pose.position.x,2) + pow(frontier_queue[i]->pose.position.y - frontier_queue[j]->pose.position.y,2));
-					if (distance < 7.0){
+					if (distance < neighbor_dist_thresh){
 						frontier_queue[i]->neighbors.push_back(frontier_queue[j]);
 					}
 				}
@@ -256,6 +272,7 @@ public:
 		}
 	}
 
+
 	void PopFront(vector< shared_ptr<FrontierPt> > &input_vec){
 		
 		if (input_vec.size() > 0){
@@ -263,29 +280,26 @@ public:
 		}
 	}
 
+
 	void ChooseFrontierPoint()
 	{
 		CreateFrontierQueue();
 		GetNeighbors();
 		CreatePathQueue();
 
-		for (int l = 0; l < pass_down_path.poses.size(); l++){
-			cout << "Pass down path coordinates:::::: " << pass_down_path.poses[l].position.x << "," << pass_down_path.poses[l].position.y << endl;
-		}
+		cout << "Size of pass down path to R2: " << pass_down_path.poses.size() << endl;
+		cout << "Size of path queue: " << path_queue.size() << endl;
 
+		if (pass_down_path.poses.size() > 0){
 
-		if (pass_down_path.poses.size() > 1){
-			for (int k = 0; k < pass_down_path_vec.size(); k++){
-				cout << "pass down path vec coordinates: " << pass_down_path_vec[k]->pose.position.x << "," << pass_down_path_vec[k]->pose.position.y << endl;
-			}
-			chosen_pt = pass_down_path_vec[0];
-			PopFront(pass_down_path_vec);
+			chosen_pt = path_queue[0];
+			PopFront(path_queue);
+
 			EraseFrontierQueue(chosen_pt);
 
-			pass_down_path_res = pass_down_path_vec;
+			pass_down_path_res = path_queue;
 			pass_down_frontier_res = frontier_queue;
 
-			cout << "coordinates of pass down point: " << chosen_pt->pose.position.x << "," << chosen_pt->pose.position.y << endl;
 		}
 		else{
 			bool ret = false;
@@ -361,13 +375,12 @@ public:
 	}
 
 	void ClearData(){
-		pass_down_path_vec.clear();
+		path_queue.clear();
 		frontier_queue.clear();
 		valid_frontier_queue.clear();
 		source_paths.clear();
 		filtered_paths.clear();
 		optimal_path.clear();
-		optimal_path_res.poses.clear();
 		pass_down_path_res.clear();
 		pass_down_frontier_res.clear();
 		pass_down_path_msg.poses.clear();
@@ -453,8 +466,8 @@ int main(int argc, char **argv){
 	ros::init(argc, argv, "frontier_choice_node_r2");
 	ros::NodeHandle nh_;
 
-	ChooseFrontier choose_frontier;
-	ros::ServiceServer choice_service = nh_.advertiseService("/choose_frontier_r2", &ChooseFrontier::ServiceCallback, &choose_frontier);
+	ChooseFrontierMain choose_frontier;
+	ros::ServiceServer choice_service = nh_.advertiseService("/choose_frontier_r2", &ChooseFrontierMain::ServiceCallback, &choose_frontier);
 
 	ros::spin();
 	return 0;

@@ -129,9 +129,9 @@ target_link_libraries(r2_main
 ${catkin_LIBRARIES}
 )
 
-add_executable(r2_choice_srv src/r2_choice_srv.cpp)
-add_dependencies(r2_choice_srv ${r2_choice_srv_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(r2_choice_srv
+add_executable(r2_choice_srv_new src/r2_choice_srv_new.cpp)
+add_dependencies(r2_choice_srv_new ${r2_choice_srv_new_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(r2_choice_srv_new
    ${catkin_LIBRARIES}
  )
 

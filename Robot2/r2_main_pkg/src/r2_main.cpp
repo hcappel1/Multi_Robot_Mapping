@@ -26,13 +26,15 @@ public:
 	geometry_msgs::PoseArray pass_down_path_send_;
 	vector<uint8_t> chosen_queue_send_;
 	int robots_remaining_send_;
+	bool backup_send_;
 
-	PassDown(geometry_msgs::PoseArray pass_down_frontier_send, geometry_msgs::PoseArray pass_down_path_send, vector<uint8_t> chosen_queue_send, int robots_remaining_send) : pass_down_r3("R3_main_action_server", true)
+	PassDown(geometry_msgs::PoseArray pass_down_frontier_send, geometry_msgs::PoseArray pass_down_path_send, vector<uint8_t> chosen_queue_send, int robots_remaining_send, bool backup_send) : pass_down_r3("R3_main_action_server", true)
 	{
 		pass_down_frontier_send_ = pass_down_frontier_send;
 		pass_down_path_send_ = pass_down_path_send;
 		chosen_queue_send_ = chosen_queue_send;
 		robots_remaining_send_ = robots_remaining_send;
+		backup_send_ = backup_send;
 		SendActionRequest();
 	}
 
@@ -45,6 +47,7 @@ public:
 		msg.pass_down_path_req = pass_down_path_send_;
 		msg.chosen_queue_req = chosen_queue_send_;
 		msg.robots_remaining = robots_remaining_send_;
+		msg.backup = backup_send_;
 
 		pass_down_r3.sendGoal(msg, boost::bind(&PassDown::doneCb, this, _1, _2), boost::bind(&PassDown::activeCb, this));
 	}
@@ -122,10 +125,12 @@ public:
 	geometry_msgs::PoseArray pass_down_path_received;
 	vector<uint8_t> chosen_queue_received;
 	int robots_remaining_received;
+	bool backup_received;
 
 	geometry_msgs::PoseArray pass_down_frontier_send;
 	geometry_msgs::PoseArray pass_down_path_send;
 	vector<uint8_t> chosen_queue_send;
+	bool backup_send;
 
 	geometry_msgs::PoseStamped chosen_pt;
 	frontier_pkg_tb::ChoiceMsg choice_msg;
@@ -153,12 +158,14 @@ public:
 		pass_down_path_received = msg->pass_down_path_req;
 		chosen_queue_received = msg->chosen_queue_req;
 		robots_remaining_received = msg->robots_remaining;
+		backup_received = msg->backup;
 
 		//Setup choice service
 		choice_msg.request.pass_down_frontier_req = pass_down_frontier_received;
 		choice_msg.request.pass_down_path_req = pass_down_path_received;
 		choice_msg.request.chosen_queue_req = chosen_queue_received;
 		choice_msg.request.robots_remaining = robots_remaining_received;
+		choice_msg.request.backup_req = backup_received;
 
 		if (choice_srv.call(choice_msg)){
 			ROS_INFO("[Robot 2 sent request for frontier choice]");
@@ -167,6 +174,7 @@ public:
 			pass_down_frontier_send = choice_msg.response.pass_down_frontier_res;
 			pass_down_path_send = choice_msg.response.pass_down_path_res;
 			chosen_queue_send = choice_msg.response.chosen_queue_res;
+			backup_send = choice_msg.response.backup_res;
 
 			cout << "size of pass down path: " << pass_down_path_send.poses.size() << endl;
 			choice_pub.publish(chosen_pt);
@@ -177,7 +185,7 @@ public:
 			ROS_ERROR("[Could not send frontier request for robot 2]");
 		}
 
-		// PassDown pass_down(pass_down_frontier_send, pass_down_path_send, chosen_queue_send, robots_remaining_received-1);
+		// PassDown pass_down(pass_down_frontier_send, pass_down_path_send, chosen_queue_send, robots_remaining_received-1, backup_send);
 		MoveBase move_base(chosen_pt);
 
 		while (ros::ok()){

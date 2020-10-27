@@ -132,9 +132,9 @@ ${catkin_LIBRARIES}
 )
 add_dependencies(r1_main r1_main_pkg_generate_messages_cpp)
 
-add_executable(r1_choice_srv src/r1_choice_srv.cpp)
-add_dependencies(r1_choice_srv ${r1_choice_srv_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(r1_choice_srv
+add_executable(r1_choice_srv_new src/r1_choice_srv_new.cpp)
+add_dependencies(r1_choice_srv_new ${r1_choice_srv_new_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(r1_choice_srv_new
    ${catkin_LIBRARIES}
  )
 ## Declare a C++ library
