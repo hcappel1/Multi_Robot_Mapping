@@ -227,12 +227,7 @@ class ChooseFrontierMain{
 private:
 	//ros variables
 	ros::NodeHandle nh;
-	ros::Publisher frontier_pub;
-	ros::Publisher frontier_pts_pub;
-	ros::Publisher valid_frontier_pts_pub;
-	
-	ros::Publisher start_pose_pub;
-	ros::Publisher end_pose_pub;
+	ros::Publisher frontier_pub;	
 	ros::Publisher relay_pose_pub;
 	ros::Publisher paths_test_pub;
 
@@ -267,6 +262,9 @@ private:
 	geometry_msgs::PoseArray pass_down_frontier_msg;
 	bool backup_send = false;
 
+	//Initial pose
+	shared_ptr<FrontierPt> initial_pose;
+
 	
 
 public:
@@ -274,14 +272,9 @@ public:
 
 	ChooseFrontierMain(){
 
-		frontier_pub = nh.advertise<geometry_msgs::PoseStamped>("chosen_frontier_pt", 1000);
-		frontier_pts_pub = nh.advertise<geometry_msgs::PoseArray>("frontier_queue", 1000);
-		valid_frontier_pts_pub = nh.advertise<geometry_msgs::PoseArray>("valid_frontier_queue", 1000);
-
-		start_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("start_pose", 1000);
-		end_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("end_pose", 1000);
-		relay_pose_pub = nh.advertise<geometry_msgs::PoseArray>("relay_poses", 1000);
-		paths_test_pub = nh.advertise<nav_msgs::Path>("paths_test", 1000);
+		frontier_pub = nh.advertise<geometry_msgs::PoseStamped>("tb3_0/chosen_frontier_pt", 1000);
+		relay_pose_pub = nh.advertise<geometry_msgs::PoseArray>("tb3_0/relay_poses", 1000);
+		paths_test_pub = nh.advertise<nav_msgs::Path>("tb3_0/backup_path", 1000);
 		
 	}
 
@@ -294,6 +287,7 @@ public:
 		chosen_queue = req.chosen_queue_req;
 		backup_receive = req.backup_req;
 		
+		InitialPose();
 		ChooseFrontierPoint();
 		if (backup_choice_use == true){
 			backup_choice.ConvertToMessageBackup();
@@ -320,6 +314,15 @@ public:
 		return true;
 	}
 
+	void InitialPose(){
+		shared_ptr<FrontierPt> new_frontier_pt = shared_ptr<FrontierPt>( new FrontierPt );
+		new_frontier_pt->pose.position.x = 9.0;
+		new_frontier_pt->pose.position.y = 9.0;
+		new_frontier_pt->pose.orientation.w = 1.0;
+		new_frontier_pt->key = (to_string(new_frontier_pt->pose.position.x) + "-" + to_string(new_frontier_pt->pose.position.y));
+		initial_pose = new_frontier_pt;
+	}
+
 	void CreateFrontierQueue(){
 
 		for (int i = 0; i < pass_down_frontier.poses.size(); i++){
@@ -338,18 +341,8 @@ public:
 		frontier_queue.push_back(source);
 	}
 
+
 	void CreatePathQueue(){
-
-		for (int i = 0; i < pass_down_path.poses.size(); i++){
-			for (int j = 0; j < frontier_queue.size(); j++){
-				if (abs(pass_down_path.poses[i].position.x - frontier_queue[j]->pose.position.x) < 0.0001 && abs(pass_down_path.poses[i].position.y - frontier_queue[j]->pose.position.y) < 0.0001){
-					path_queue.push_back(frontier_queue[j]);
-				}
-			}
-		}
-	}
-
-	void CreateBackupPathQueue(){
 
 		for (int i = 0; i < pass_down_path.poses.size(); i++){
 			shared_ptr<FrontierPt> new_frontier_pt = shared_ptr<FrontierPt>( new FrontierPt );
@@ -491,13 +484,7 @@ public:
 	{
 		CreateFrontierQueue();
 		GetNeighbors();
-
-		if (backup_receive == false){
-			CreatePathQueue();
-		}
-		else{
-			CreateBackupPathQueue();
-		}
+		CreatePathQueue();
 
 
 		if (pass_down_path.poses.size() > 0){
@@ -505,10 +492,8 @@ public:
 			chosen_pt = path_queue[0];
 			PopFront(path_queue);
 
-			if (backup_receive == false){
-				EraseFrontierQueue(chosen_pt);
-			}
-
+			EraseFrontierQueue(chosen_pt);
+			
 			pass_down_path_res = path_queue;
 			pass_down_frontier_res = frontier_queue;
 		}
@@ -520,8 +505,6 @@ public:
 					valid_frontier_queue.push_back(frontier_queue[i]);
 				}
 			}
-			cout << "Size of frontier queue: " << frontier_queue.size() << endl;
-			cout << "Size of valid frontier queue: " << valid_frontier_queue.size() << endl;
 
 			while (valid_frontier_queue.size() > 0){
 				if (valid_frontier_queue[0]->chosen == false){
@@ -564,8 +547,8 @@ public:
 				}
 				else{
 
-					ROS_INFO("[Robot 1 failed to find a valid point]");
-					chosen_pt = frontier_queue.back();
+					ROS_INFO("[Robot 1 failed to find a valid point. Returning to initial pose.]");
+					chosen_pt = initial_pose;
 					pass_down_path_res = optimal_path;
 					pass_down_frontier_res = frontier_queue;
 				}
