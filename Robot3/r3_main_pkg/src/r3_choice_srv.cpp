@@ -1,7 +1,6 @@
 #include <ros/ros.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Path.h>
-#include <nav_msgs/GetPlan.h>
 #include <geometry_msgs/Pose.h>
 #include <frontier_pkg_tb/ChoiceMsg.h>
 #include <vector>
@@ -15,8 +14,10 @@
 #include <nav_msgs/Odometry.h>
 #include <list>
 #include <algorithm>
+#include <nav_msgs/GetPlan.h>
 
 using namespace std;
+
 
 class FrontierPt{
 
@@ -39,6 +40,7 @@ public:
 		key = "source";
 	}
 };
+
 
 class BackupChoice{
 public:
@@ -84,7 +86,7 @@ public:
 
 
 	BackupChoice(){
-		get_path_srv = nh_.serviceClient<nav_msgs::GetPlan>("tb3_1/move_base/make_plan");
+		get_path_srv = nh_.serviceClient<nav_msgs::GetPlan>("tb3_2/move_base/make_plan");
 	}
 
 	~BackupChoice(){
@@ -92,7 +94,7 @@ public:
 	}
 
 	void Initialize(vector< shared_ptr<FrontierPt> > frontier_queue, int robots_remaining, vector<uint8_t> chosen_queue){
-		ROS_INFO("[Robot 2 executing backup choice]");
+		ROS_INFO("[Robot 3 executing backup choice]");
 		frontier_queue_ = frontier_queue;
 		robots_remaining_ = robots_remaining;
 		chosen_queue_msg_ = chosen_queue;
@@ -109,9 +111,9 @@ public:
 		end_pose.pose.orientation.w = 1.0;
 
 		start_pose.header.stamp = ros::Time::now();
-		start_pose.header.frame_id = "tb3_1/map";
+		start_pose.header.frame_id = "tb3_2/map";
 		end_pose.header.stamp = ros::Time::now();
-		end_pose.header.frame_id = "tb3_1/map";
+		end_pose.header.frame_id = "tb3_2/map";
 
 		plan_msg.request.start = start_pose;
 		plan_msg.request.goal = end_pose;
@@ -183,7 +185,6 @@ public:
 							pass_down_path_msg_.poses.push_back(relay_pose);
 
 						}
-						
 
 						EraseFrontierQueue(candidate_pt_backup);
 
@@ -204,7 +205,7 @@ public:
 
 	void ConvertToMessageBackup(){
 
-		path.header.frame_id = "tb3_1/map";
+		path.header.frame_id = "tb3_2/map";
 
 		chosen_pt_msg_.header.frame_id = "map";
 		chosen_pt_msg_.pose = chosen_pt->pose;
@@ -228,6 +229,7 @@ public:
 	}
 
 };
+
 
 class ChooseFrontierMain{
 
@@ -272,16 +274,17 @@ private:
 	//Initial pose
 	shared_ptr<FrontierPt> initial_pose;
 
+	
 
 public:
 
 
 	ChooseFrontierMain(){
 
-		frontier_pub = nh.advertise<geometry_msgs::PoseStamped>("tb3_1/chosen_frontier_pt", 1000);
-		relay_pose_pub = nh.advertise<geometry_msgs::PoseArray>("tb3_1/relay_poses", 1000);
-		paths_test_pub = nh.advertise<nav_msgs::Path>("tb3_1/backup_path", 1000);
-
+		frontier_pub = nh.advertise<geometry_msgs::PoseStamped>("tb3_2/chosen_frontier_pt", 1000);
+		relay_pose_pub = nh.advertise<geometry_msgs::PoseArray>("tb3_2/relay_poses", 1000);
+		paths_test_pub = nh.advertise<nav_msgs::Path>("tb3_2/backup_path", 1000);
+		
 	}
 
 	bool ServiceCallback(frontier_pkg_tb::ChoiceMsg::Request &req,
@@ -312,7 +315,6 @@ public:
 			res.chosen_queue_res = chosen_queue;
 			res.backup_res = backup_send;
 			res.success = true;
-
 		}
 
 
@@ -324,7 +326,7 @@ public:
 	void InitialPose(){
 		shared_ptr<FrontierPt> new_frontier_pt = shared_ptr<FrontierPt>( new FrontierPt );
 		new_frontier_pt->pose.position.x = 9.0;
-		new_frontier_pt->pose.position.y = 12.17;
+		new_frontier_pt->pose.position.y = 11.17;
 		new_frontier_pt->pose.orientation.w = 1.0;
 		new_frontier_pt->key = (to_string(new_frontier_pt->pose.position.x) + "-" + to_string(new_frontier_pt->pose.position.y));
 		initial_pose = new_frontier_pt;
@@ -347,6 +349,7 @@ public:
 		source->rank_val = pass_down_frontier.poses.size() + 2;
 		frontier_queue.push_back(source);
 	}
+
 
 	void CreatePathQueue(){
 
@@ -478,7 +481,6 @@ public:
 		}
 	}
 
-
 	void PopFront(vector< shared_ptr<FrontierPt> > &input_vec){
 		
 		if (input_vec.size() > 0){
@@ -500,10 +502,9 @@ public:
 			PopFront(path_queue);
 
 			EraseFrontierQueue(chosen_pt);
-
+			
 			pass_down_path_res = path_queue;
 			pass_down_frontier_res = frontier_queue;
-
 		}
 		else{
 			bool ret = false;
@@ -524,7 +525,7 @@ public:
 					FilterPaths();
 
 					if (filtered_paths.size() > 0){
-						ROS_INFO("[R2 found a valid chosen point]");
+						ROS_INFO("[R3 found a valid chosen point]");
 						OptimalPath();
 						PopFront(optimal_path);
 						optimal_path.pop_back();
@@ -548,20 +549,12 @@ public:
 				}
 			}
 			if (ret == false){
-				backup_choice.Initialize(frontier_queue, robots_remaining, chosen_queue);
-				if (backup_choice.BackupFrontierChoice()){
-					backup_choice_use = true;
-					backup_choice.ConvertToMessageBackup();
-					paths_test_pub.publish(backup_choice.path);
-					relay_pose_pub.publish(backup_choice.pass_down_path_msg_);
-				}
-				else{
 
-					ROS_INFO("[Robot 2 failed to find a valid point. Returning to initial pose.]");
+					ROS_INFO("[Robot 3 failed to find a valid point. Returning to initial pose.]");
 					chosen_pt = initial_pose;
 					pass_down_path_res = optimal_path;
 					pass_down_frontier_res = frontier_queue;
-				}
+				
 			}
 		}
 	}
@@ -577,7 +570,7 @@ public:
 		for (int i = 0; i < pass_down_path_res.size(); i++){
 			pass_down_path_msg.poses.push_back(pass_down_path_res[i]->pose);
 		}
-
+		
 		pass_down_frontier_msg.header.stamp = ros::Time::now();
 		pass_down_frontier_msg.header.frame_id = "map";
 		for (int j = 0; j < pass_down_frontier_res.size()-1; j++){
@@ -591,7 +584,6 @@ public:
 	}
 
 	void ClearData(){
-		backup_choice_use = false;
 		path_queue.clear();
 		frontier_queue.clear();
 		valid_frontier_queue.clear();
@@ -602,20 +594,21 @@ public:
 		pass_down_frontier_res.clear();
 		pass_down_path_msg.poses.clear();
 		pass_down_frontier_msg.poses.clear();
+		backup_choice_use = false;
 	}
 
-	
+
 
 };
 
 
 int main(int argc, char **argv){
 
-	ros::init(argc, argv, "frontier_choice_node_r2");
+	ros::init(argc, argv, "frontier_choice_node_r3");
 	ros::NodeHandle nh_;
 
-	ChooseFrontierMain choose_frontier;
-	ros::ServiceServer choice_service = nh_.advertiseService("/choose_frontier_r2", &ChooseFrontierMain::ServiceCallback, &choose_frontier);
+	ChooseFrontierMain choose_frontier_main;
+	ros::ServiceServer choice_service = nh_.advertiseService("/choose_frontier_r3", &ChooseFrontierMain::ServiceCallback, &choose_frontier_main);
 
 	ros::spin();
 	return 0;

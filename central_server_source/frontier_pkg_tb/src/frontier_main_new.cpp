@@ -94,7 +94,7 @@ public:
 		msg.pass_down_frontier_req = pass_down_frontier_send;
 		msg.pass_down_path_req = pass_down_path_send;
 		msg.chosen_queue_req = init_chosen_queue;
-		msg.robots_remaining = 2;
+		msg.robots_remaining = 3;
 		msg.backup = false;
 
 		pass_down_r1.sendGoal(msg, boost::bind(&PassDown::doneCb, this, _1, _2), boost::bind(&PassDown::activeCb, this));

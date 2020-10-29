@@ -33,8 +33,6 @@
       <param name="local_costmap/global_frame" value="$(arg robot_namespace)/odom"/>
       <param name="local_costmap/robot_base_frame"
 	     value="$(arg robot_namespace)/base_footprint"/>
-       <param name="DWAPlannerROS/xy_goal_tolerance" value="0.15"/>
-       <param name="DWAPlannerROS/yaw_goal_tolerance" value="0.15"/>
 
       <!-- Centralized map server -->
       <remap from="map" to="/tb3_0/map"/>

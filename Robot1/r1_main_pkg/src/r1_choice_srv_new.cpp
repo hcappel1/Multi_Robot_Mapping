@@ -56,7 +56,7 @@ public:
 	double path_distance;
 
 	//tuning variables
-	double neighbor_dist_thresh = 10.0;
+	double neighbor_dist_thresh = 5.0;
 
 	//Backup choice function
 	shared_ptr<FrontierPt> candidate_pt_backup;
@@ -154,39 +154,48 @@ public:
 
 	bool BackupFrontierChoice(){
 
-		for (int i = 0; i < frontier_queue_.size(); i++){
-			if (frontier_queue_[i]->chosen == false){
-				candidate_pt_backup = frontier_queue_[i];
-				
-				path = GetBackupPath(candidate_pt_backup);
-				path_distance = PathDistance(path);
+		if (frontier_queue_.size() > 1){
+			for (int i = 0; i < frontier_queue_.size(); i++){
+				if (frontier_queue_[i]->chosen == false){
+					candidate_pt_backup = frontier_queue_[i];
+					
+					path = GetBackupPath(candidate_pt_backup);
+					path_distance = PathDistance(path);
 
-				if (path_distance > robots_remaining_*neighbor_dist_thresh){
-					continue;
+					if (path_distance > robots_remaining_*neighbor_dist_thresh){
+						continue;
+					}
+					else{
+						chosen_pt = candidate_pt_backup;
+
+						int robots_use = 1;
+						double path_sect = path_distance;
+						while (path_sect >= neighbor_dist_thresh){
+							robots_use++;
+							path_sect = path_sect/robots_use;
+						}
+
+						for (int j = 1; j <= robots_use-1; j++){
+							
+							geometry_msgs::Pose relay_pose = path.poses[int(j*path.poses.size()/robots_use)].pose;
+							double x_pos = relay_pose.position.x;
+							double y_pos = relay_pose.position.y;
+							relay_pose.position.x = x_pos*cos(theta_map) - y_pos*sin(theta_map) + x_trans_map;
+							relay_pose.position.y = x_pos*sin(theta_map) + y_pos*cos(theta_map) + y_trans_map;
+							pass_down_path_msg_.poses.push_back(relay_pose);
+
+						}
+
+						EraseFrontierQueue(candidate_pt_backup);
+
+						backup_send = true;
+						return true;
+						break;
+					}
 				}
 				else{
-					chosen_pt = candidate_pt_backup;
-
-					for (int j = 1; j <= robots_remaining_-1; j++){
-						
-						geometry_msgs::Pose relay_pose = path.poses[int(j*path.poses.size()/robots_remaining_)].pose;
-						double x_pos = relay_pose.position.x;
-						double y_pos = relay_pose.position.y;
-						relay_pose.position.x = x_pos*cos(theta_map) - y_pos*sin(theta_map) + x_trans_map;
-						relay_pose.position.y = x_pos*sin(theta_map) + y_pos*cos(theta_map) + y_trans_map;
-						pass_down_path_msg_.poses.push_back(relay_pose);
-
-					}
-
-					EraseFrontierQueue(candidate_pt_backup);
-
-					backup_send = true;
-					return true;
-					break;
+					continue;
 				}
-			}
-			else{
-				continue;
 			}
 		}
 
@@ -317,7 +326,7 @@ public:
 	void InitialPose(){
 		shared_ptr<FrontierPt> new_frontier_pt = shared_ptr<FrontierPt>( new FrontierPt );
 		new_frontier_pt->pose.position.x = 9.0;
-		new_frontier_pt->pose.position.y = 9.0;
+		new_frontier_pt->pose.position.y = 13.17;
 		new_frontier_pt->pose.orientation.w = 1.0;
 		new_frontier_pt->key = (to_string(new_frontier_pt->pose.position.x) + "-" + to_string(new_frontier_pt->pose.position.y));
 		initial_pose = new_frontier_pt;
@@ -500,11 +509,14 @@ public:
 		else{
 			bool ret = false;
 
-			for (int i = 0; i < frontier_queue.size(); i++){
+			for (int i = 0; i < frontier_queue.size()-1; i++){
 				if (FrontierValid(frontier_queue[i]) == true){
 					valid_frontier_queue.push_back(frontier_queue[i]);
 				}
 			}
+
+			cout << "Size of frontier queue: " << frontier_queue.size() << endl;
+			cout << "Size of valid frontier_queue: " << valid_frontier_queue.size() << endl;
 
 			while (valid_frontier_queue.size() > 0){
 				if (valid_frontier_queue[0]->chosen == false){
@@ -513,7 +525,7 @@ public:
 					FilterPaths();
 
 					if (filtered_paths.size() > 0){
-						cout << "found a valid chosen point" << endl;
+						ROS_INFO("[R1 found a valid point]");
 						OptimalPath();
 						PopFront(optimal_path);
 						optimal_path.pop_back();
@@ -570,7 +582,7 @@ public:
 		
 		pass_down_frontier_msg.header.stamp = ros::Time::now();
 		pass_down_frontier_msg.header.frame_id = "map";
-		for (int j = 0; j < pass_down_frontier_res.size(); j++){
+		for (int j = 0; j < pass_down_frontier_res.size()-1; j++){
 			pass_down_frontier_msg.poses.push_back(pass_down_frontier_res[j]->pose);
 
 			if (pass_down_frontier_res[j]->chosen == true){
@@ -591,6 +603,7 @@ public:
 		pass_down_frontier_res.clear();
 		pass_down_path_msg.poses.clear();
 		pass_down_frontier_msg.poses.clear();
+		backup_choice_use = false;
 	}
 
 

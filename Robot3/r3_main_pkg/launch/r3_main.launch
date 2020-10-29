@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="r3_main_pkg" type="r3_choice_srv" name="r3_choice_srv_node" output="screen" />
+	<node pkg="r3_main_pkg" type="r3_main" name="r3_main_node" output="screen" />
+</launch>

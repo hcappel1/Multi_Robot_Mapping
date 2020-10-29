@@ -5,16 +5,22 @@
 	<arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
 	<arg name="first_tb3"  default="tb3_0"/>
 	<arg name="second_tb3" default="tb3_1"/>
+	<arg name="third_tb3" default="tb3_2"/>
 
-	<arg name="x_pos_1" default="-3.0"/>
+	<arg name="x_pos_1" default="-4.0"/>
 	<arg name="y_pos_1" default="1.0"/>
 	<arg name="z_pos_1" default="0.0"/>
 	<arg name="yaw_1" default="1.57"/>
 
-	<arg name="x_pos_2" default="-1.0"/>
+	<arg name="x_pos_2" default="-3.0"/>
 	<arg name="y_pos_2" default="1.0"/>
 	<arg name="z_pos_2" default="0.0"/>
 	<arg name="yaw_2" default="1.57"/>
+
+	<arg name="x_pos_3" default="-2.0"/>
+	<arg name="y_pos_3" default="1.0"/>
+	<arg name="z_pos_3" default="0.0"/>
+	<arg name="yaw_3" default="1.57"/>
 
 	<!-- Launch simulated world-->
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
@@ -22,7 +28,7 @@
 	  <arg name="world_name" value="$(find simulation_env)/worlds/house_env.world"/>
 	  <arg name="paused" value="false"/>
 	  <arg name="use_sim_time" value="true"/>
-	  <arg name="gui" value="true"/>
+	  <arg name="gui" value="false"/>
 	  <arg name="headless" value="false"/>
 	  <arg name="debug" value="false"/>
 	</include>
@@ -52,6 +58,18 @@
 
 	</group>
 
+	<group ns = "$(arg third_tb3)">
+	  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+
+	  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+	    <param name="publish_frequency" type="double" value="50.0" />
+	    <param name="tf_prefix" value="$(arg third_tb3)" />
+	  </node>
+
+	  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg third_tb3) -x $(arg x_pos_3) -y $(arg y_pos_3) -z $(arg z_pos_3) -Y $(arg yaw_3) -param robot_description" />
+
+	</group>
+
 	<!-- Launch SLAM robot 1-->
 	<include file="$(find r1_slam_pkg)/launch/r1_slam_tb.launch"/>
 
@@ -63,6 +81,12 @@
 
 	<!-- Launch move base robot 2-->
 	<include file="$(find r2_navigation_pkg)/launch/r2_navigation_tb.launch"/>
+
+	<!-- Launch SLAM robot 3-->
+	<include file="$(find r3_slam_pkg)/launch/r3_slam_tb.launch"/>
+
+	<!-- Launch move base robot 3-->
+	<include file="$(find r3_navigation_pkg)/launch/r3_navigation_tb.launch"/>
 
 	<!-- Launch map merge -->
 	<include file="$(find map_merge)/launch/map_merge_tb.launch"/>
